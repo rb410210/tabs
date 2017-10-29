@@ -14,12 +14,15 @@ public class TabsApplication {
 	private static final Logger logger = LoggerFactory.getLogger(TabsApplication.class);
 
 	public static void main(String[] args) {
-		try {
-			final ConfigurableApplicationContext context = SpringApplication.run(TabsApplication.class, args);
-			final Artist artist = context.getBean(ArtistSearcher.class).execute(args[0]);
-			context.getBean(ArtistDownloader.class).execute(artist);
-		} catch (final Exception e) {
-			logger.error(e.getMessage(), e);
+		final ConfigurableApplicationContext context = SpringApplication.run(TabsApplication.class, args);
+		for(final String arg: args) {
+			try {
+				final Artist artist = context.getBean(ArtistSearcher.class).execute(arg);
+				context.getBean(ArtistDownloader.class).execute(artist);
+			} catch (final Exception e) {
+				logger.error(e.getMessage(), e);
+			}
+
 		}
 	}
 }
