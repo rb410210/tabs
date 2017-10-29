@@ -24,7 +24,8 @@ public class ArtistSearcher {
     @Autowired
     private Downloader downloader;
 
-    public Artist execute(final String artist) throws IOException {
+    public Artist execute(final String artist) throws IOException, InterruptedException {
+        logger.info("Starting search criteria: " + artist);
         final String url = "https://www.ultimate-guitar.com/search.php?search_type=band&order=&value=" + URLEncoder.encode(artist, String.valueOf(StandardCharsets.US_ASCII));
         final String content = downloader.execute(url);
         logger.debug("Content: " + content);
@@ -32,7 +33,7 @@ public class ArtistSearcher {
         return parseSearchResults(html);
     }
 
-    private Artist parseSearchResults(final Document html) throws IOException {
+    private Artist parseSearchResults(final Document html) throws IOException, InterruptedException {
         final Artist artist = new Artist();
         final List<Tab> tabs = new ArrayList<>();
         artist.setTabs(tabs);
@@ -56,7 +57,8 @@ public class ArtistSearcher {
         return artist;
     }
 
-    private void downloadTabIndexes(final String tabIndex, final List<Tab> tabs) throws IOException {
+    private void downloadTabIndexes(final String tabIndex, final List<Tab> tabs) throws IOException, InterruptedException {
+        Thread.sleep(2000L);
         final String content = downloader.execute("https://www.ultimate-guitar.com/" + tabIndex);
         logger.debug("Content: " + content);
         final Document html = Jsoup.parse(content);

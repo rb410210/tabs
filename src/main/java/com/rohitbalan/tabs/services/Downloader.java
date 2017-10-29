@@ -1,6 +1,8 @@
 package com.rohitbalan.tabs.services;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -20,7 +22,15 @@ public class Downloader {
 
     public String execute(final String url) throws IOException {
         final CloseableHttpClient httpClient = HttpClients.createDefault();
+
         final HttpGet httpGet = new HttpGet(url);
+
+        if(System.getProperty("http.proxyHost")!=null && System.getProperty("http.proxyPort")!=null) {
+            final HttpHost proxy = new HttpHost(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")), "http");
+            final RequestConfig config = RequestConfig.custom().setProxy(proxy).build();
+            httpGet.setConfig(config);
+        }
+
         final CloseableHttpResponse response = httpClient.execute(httpGet);
         final HttpEntity entity = response.getEntity();
         return EntityUtils.toString(entity, StandardCharsets.UTF_8);

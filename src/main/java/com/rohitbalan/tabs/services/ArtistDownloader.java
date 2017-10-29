@@ -27,7 +27,7 @@ public class ArtistDownloader {
     @Value("${com.rohitbalan.tabs.downloadTo}")
     private String downloadTo;
 
-    public void execute(final Artist artist) throws IOException {
+    public void execute(final Artist artist) throws IOException, InterruptedException {
         if(artist!=null && artist.getName()!=null && !artist.getTabs().isEmpty()) {
             final File artistFolder = createFolder(artist);
             for(final Tab tab: artist.getTabs()) {
@@ -53,8 +53,9 @@ public class ArtistDownloader {
         return artistFolder;
     }
 
-    private void downloadTab(final Tab tab, final File folder) throws IOException {
+    private void downloadTab(final Tab tab, final File folder) throws IOException, InterruptedException {
         final File tabFile = computeTabFile(tab, folder, 0);
+        Thread.sleep(100L);
         final String content = downloader.execute(tab.getUri());
         logger.debug("Content: " + content);
 
