@@ -1,1 +1,1 @@
-# tabs
+# Guitar Tab Manager
