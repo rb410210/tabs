@@ -1,5 +1,7 @@
 package com.rohitbalan.tabs;
 
+import com.rohitbalan.tabs.model.Artist;
+import com.rohitbalan.tabs.services.ArtistDownloader;
 import com.rohitbalan.tabs.services.ArtistSearcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +16,8 @@ public class TabsApplication {
 	public static void main(String[] args) {
 		try {
 			final ConfigurableApplicationContext context = SpringApplication.run(TabsApplication.class, args);
-			context.getBean(ArtistSearcher.class).execute(args[0]);
+			final Artist artist = context.getBean(ArtistSearcher.class).execute(args[0]);
+			context.getBean(ArtistDownloader.class).execute(artist);
 		} catch (final Exception e) {
 			logger.error(e.getMessage(), e);
 		}
