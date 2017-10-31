@@ -55,7 +55,7 @@ public class ArtistDownloader {
 
     private void downloadTab(final Tab tab, final File folder) throws IOException, InterruptedException {
         final File tabFile = computeTabFile(tab, folder, 0);
-        Thread.sleep(100L);
+        Thread.sleep(1000L);
         final String content = downloader.execute(tab.getUri());
         logger.debug("Content: " + content);
 
