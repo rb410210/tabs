@@ -1,5 +1,9 @@
 package com.rohitbalan.tabs.model;
 
+import org.apache.commons.codec.binary.StringUtils;
+
+import java.util.Objects;
+
 public class Tab {
     private String name;
     private String uri;
@@ -23,6 +27,19 @@ public class Tab {
     public Tab(String name, String uri) {
         this.name = name;
         this.uri = uri;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Tab tab = (Tab) o;
+        return StringUtils.equals(uri, tab.uri);
+    }
+
+    @Override
+    public int hashCode() {
+        return uri.hashCode();
     }
 
     @Override

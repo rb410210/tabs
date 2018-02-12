@@ -3,24 +3,18 @@ package com.rohitbalan.tabs.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rohitbalan.tabs.model.Artist;
 import com.rohitbalan.tabs.model.Tab;
-import org.apache.commons.io.IOUtils;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,13 +37,12 @@ public class ArtistSearcher {
         final String url = "https://www.ultimate-guitar.com/search.php?search_type=band&order=&value=" + URLEncoder.encode(artist, String.valueOf(StandardCharsets.US_ASCII));
         final String content = downloader.execute(url);
 
-        final Document html = Jsoup.parse(content);
         return parseSearchResults(content);
     }
 
     private Artist parseSearchResults(final String content) throws IOException, InterruptedException {
         final Artist artist = new Artist();
-        final List<Tab> tabs = new ArrayList<>();
+        final Set<Tab> tabs = new LinkedHashSet<>();
         artist.setTabs(tabs);
 
         final Map<String, ?> searchJson = standardMatcherJson(content);
@@ -98,8 +91,8 @@ public class ArtistSearcher {
         return artist;
     }
 
-    private List<Tab> getTabs(final Map<String, ?> artistJson) {
-        final List<Tab> tabs = new ArrayList<>();
+    private Set<Tab> getTabs(final Map<String, ?> artistJson) {
+        final Set<Tab> tabs = new LinkedHashSet<>();
         final List<Map<String, String>> othertabs = ((Map<String, Map<String, List<Map<String, String>>>>) artistJson).get("data").get("other_tabs");
         for(final Map<String, String> tabMap: othertabs) {
             final String marketingType = tabMap.get("marketing_type");
@@ -126,20 +119,5 @@ public class ArtistSearcher {
         return null;
     }
 
-    private void downloadTabIndexes(final String tabIndex, final List<Tab> tabs) throws IOException, InterruptedException {
-        Thread.sleep(3000L);
-        final String content = downloader.execute("https://www.ultimate-guitar.com/" + tabIndex);
-        logger.debug("Content: " + content);
-        final Document html = Jsoup.parse(content);
-        for (final Element anchorElement : html.body().getElementsByTag("a")) {
-            final String text = anchorElement.text();
-            final String link = anchorElement.attr("href");
-            if(link.contains("https://tabs.ultimate-guitar.com/")) {
-                tabs.add(new Tab(text, link));
-            } else if ("Next »".equals(text)) {
-                downloadTabIndexes(link, tabs);
-            }
-            logger.debug(text + " " + link);
-        }
-    }
+
 }

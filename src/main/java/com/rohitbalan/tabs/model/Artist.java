@@ -1,10 +1,10 @@
 package com.rohitbalan.tabs.model;
 
-import java.util.List;
+import java.util.Set;
 
 public class Artist {
     private String name;
-    private List<Tab> tabs;
+    private Set<Tab> tabs;
 
     public String getName() {
         return name;
@@ -14,11 +14,11 @@ public class Artist {
         this.name = name;
     }
 
-    public List<Tab> getTabs() {
+    public Set<Tab> getTabs() {
         return tabs;
     }
 
-    public void setTabs(List<Tab> tabs) {
+    public void setTabs(Set<Tab> tabs) {
         this.tabs = tabs;
     }
 }
