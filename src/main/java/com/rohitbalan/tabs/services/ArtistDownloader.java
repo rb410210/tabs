@@ -64,6 +64,7 @@ public class ArtistDownloader {
 
         if(tabFile.exists()) {
             logger.info("Was previously downloaded: {}", tab.getName());
+            return;
         }
 
         /*
@@ -74,14 +75,20 @@ public class ArtistDownloader {
 
         logger.debug("Content: {}", content);
         final Map<String, ?> tabJson = standardMatcherJson(content);
-        final String tabContent = ((Map<String, Map<String, Map<String, Map<String, String>>>>) tabJson).get("data").get("tab_view").get("wiki_tab").get("content");
+        String tabContent = null;
+
 
         final StringBuilder logStatus = new StringBuilder();
         logStatus.append("Downloading - ");
         logStatus.append(tab.getName());
         logStatus.append(" : ");
+        try {
+            tabContent = ((Map<String, Map<String, Map<String, Map<String, String>>>>) tabJson).get("data").get("tab_view").get("wiki_tab").get("content");
+            FileCopyUtils.copy(tabContent.getBytes(StandardCharsets.UTF_8), tabFile);
+        } catch (Exception error) {
+            logger.error("Unable to download {}", tab.getUri());
+        }
 
-        FileCopyUtils.copy(tabContent.getBytes(StandardCharsets.UTF_8), tabFile);
         if(tabFile.exists()) {
             logStatus.append("COMPLETED");
         } else {
