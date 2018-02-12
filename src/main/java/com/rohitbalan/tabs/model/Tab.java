@@ -2,8 +2,6 @@ package com.rohitbalan.tabs.model;
 
 import org.apache.commons.codec.binary.StringUtils;
 
-import java.util.Objects;
-
 public class Tab {
     private String name;
     private String uri;
