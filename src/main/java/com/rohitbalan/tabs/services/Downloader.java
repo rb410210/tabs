@@ -32,6 +32,7 @@ public class Downloader {
         if(urlsDownloadedToday < dailyDownloadThreshold) {
             urlsDownloadedToday++;
         } else {
+            logger.info("Sleeping for a day");
             Thread.sleep(1000 * 60 * 60 * 24);
             urlsDownloadedToday = 0;
         }
