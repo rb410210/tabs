@@ -1,7 +1,9 @@
 package com.rohitbalan.tabs.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rohitbalan.tabs.model.Artist;
 import com.rohitbalan.tabs.model.Tab;
+import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -9,12 +11,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileCopyUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class ArtistDownloader {
@@ -43,52 +52,59 @@ public class ArtistDownloader {
             throw new RuntimeException("Folder " + downloadTo + " is not present");
         }
         final File artistFolder = new File(parentFolder, artist.getName());
-        if(artistFolder.exists()) {
-            throw new RuntimeException("Artist Folder already exists.");
-        }
-        boolean artistFolderCreated = artistFolder.mkdir();
-        if(!artistFolderCreated) {
-            throw new RuntimeException("Unable to create artist folder");
+        artistFolder.mkdirs();
+        if(!artistFolder.exists()) {
+            throw new RuntimeException("Artist Folder not created.");
         }
         return artistFolder;
     }
 
     private void downloadTab(final Tab tab, final File folder) throws IOException, InterruptedException {
-        final File tabFile = computeTabFile(tab, folder, 0);
-        Thread.sleep(1000L);
+        final File tabFile = computeTabFile(tab, folder);
+
+        if(tabFile.exists()) {
+            logger.info("Was previously downloaded: {}", tab.getName());
+        }
+
+        /*
+        final InputStream stream = new ClassPathResource("/tab-content.html").getInputStream();
+        final String content = IOUtils.toString(stream, Charset.defaultCharset());
+        */
         final String content = downloader.execute(tab.getUri());
-        logger.debug("Content: " + content);
+
+        logger.debug("Content: {}", content);
+        final Map<String, ?> tabJson = standardMatcherJson(content);
+        final String tabContent = ((Map<String, Map<String, Map<String, Map<String, String>>>>) tabJson).get("data").get("tab_view").get("wiki_tab").get("content");
 
         final StringBuilder logStatus = new StringBuilder();
         logStatus.append("Downloading - ");
         logStatus.append(tab.getName());
         logStatus.append(" : ");
 
-        final Document html = Jsoup.parse(content);
-
-        for (final Element preElement : html.body().getElementsByTag("pre")) {
-            if(preElement.hasClass("js-tab-content")) {
-                final String tabData = preElement.text();
-                logger.debug("tabData: " + tabData);
-                FileCopyUtils.copy(tabData.getBytes(StandardCharsets.UTF_8), tabFile);
-            }
-        }
-
+        FileCopyUtils.copy(tabContent.getBytes(StandardCharsets.UTF_8), tabFile);
         if(tabFile.exists()) {
             logStatus.append("COMPLETED");
         } else {
             logStatus.append("FAILED");
         }
         logger.info(logStatus.toString());
-
     }
 
-    private File computeTabFile(final Tab tab, final File folder, final int i) {
-        final File tabFile = new File(folder, tab.getName() + (i==0? "" : (" - " + i)) + ".txt");
-        if(tabFile.exists()) {
-            return computeTabFile(tab, folder, i + 1);
-        } else {
-            return tabFile;
+    private Map<String, ?> standardMatcherJson(final String content) throws IOException {
+        final Pattern pattern = Pattern.compile("(.*)(window.UGAPP.store.page = )([{].*[}])(</script>)");
+        final Matcher matcher = pattern.matcher(content);
+
+        if (matcher.find()) {
+            String json = matcher.group(3);
+            final Map<String, ?> parsedObject = new ObjectMapper().readValue(json, Map.class);
+            return parsedObject;
         }
+        return null;
+    }
+
+
+    private File computeTabFile(final Tab tab, final File folder) {
+        final File tabFile = new File(folder, tab.getName() + ".txt");
+        return tabFile;
     }
 }

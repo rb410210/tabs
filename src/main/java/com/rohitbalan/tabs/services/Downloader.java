@@ -10,6 +10,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -20,7 +21,20 @@ public class Downloader {
 
     private final Logger logger = LoggerFactory.getLogger(Downloader.class);
 
-    public String execute(final String url) throws IOException {
+    @Value("${com.rohitbalan.tabs.dailyDownloadThreshold}")
+    private int dailyDownloadThreshold;
+
+    private int urlsDownloadedToday;
+
+
+
+    public String execute(final String url) throws IOException, InterruptedException {
+        if(urlsDownloadedToday < dailyDownloadThreshold) {
+            urlsDownloadedToday++;
+        } else {
+            Thread.sleep(1000 * 60 * 60 * 24);
+            urlsDownloadedToday = 0;
+        }
         final CloseableHttpClient httpClient = HttpClients.createDefault();
 
         final HttpGet httpGet = new HttpGet(url);
