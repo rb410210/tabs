@@ -52,9 +52,10 @@ public class ArtistDownloader {
     }
 
     private void downloadTab(final Tab tab, final File folder) throws IOException, InterruptedException {
-        final File tabFile = computeTabFile(tab, folder);
+        final File jsonFile = computeTabFile(tab, folder, "json");
+        final File rawHtmlFile = computeTabFile(tab, folder, "raw_html");
 
-        if(tabFile.exists()) {
+        if(rawHtmlFile.exists()) {
             logger.info("Was previously downloaded: {}", tab.getName());
             return;
         }
@@ -65,9 +66,6 @@ public class ArtistDownloader {
         */
         final String content = downloader.execute(tab.getUri());
 
-        logger.debug("Content: {}", content);
-        final Map<String, ?> tabJson = standardMatcherJson(content);
-        String tabContent = null;
 
 
         final StringBuilder logStatus = new StringBuilder();
@@ -75,13 +73,20 @@ public class ArtistDownloader {
         logStatus.append(tab.getName());
         logStatus.append(" : ");
         try {
-            tabContent = ((Map<String, Map<String, Map<String, Map<String, String>>>>) tabJson).get("data").get("tab_view").get("wiki_tab").get("content");
-            FileCopyUtils.copy(tabContent.getBytes(StandardCharsets.UTF_8), tabFile);
+            logger.debug("Content: {}", content);
+            FileCopyUtils.copy(content.getBytes(StandardCharsets.UTF_8), rawHtmlFile);
+
+
+            final String tabJson = standardMatcherJson(content);
+            FileCopyUtils.copy(tabJson.getBytes(StandardCharsets.UTF_8), jsonFile);
+
+            //String tabContent = ((Map<String, Map<String, Map<String, Map<String, String>>>>) tabJson).get("data").get("tab_view").get("wiki_tab").get("content");
+
         } catch (Exception error) {
             logger.error("Unable to download {}", tab.getUri());
         }
 
-        if(tabFile.exists()) {
+        if(jsonFile.exists()) {
             logStatus.append("COMPLETED");
         } else {
             logStatus.append("FAILED");
@@ -89,21 +94,19 @@ public class ArtistDownloader {
         logger.info(logStatus.toString());
     }
 
-    private Map<String, ?> standardMatcherJson(final String content) throws IOException {
-        final Pattern pattern = Pattern.compile("(.*)(window.UGAPP.store.page = )([{].*[}])(</script>)");
+    private String standardMatcherJson(final String content) throws IOException {
+        final Pattern pattern = Pattern.compile("(.*)(window.UGAPP.store.page = )([{].*[}])(</script>)*");
         final Matcher matcher = pattern.matcher(content);
 
         if (matcher.find()) {
-            String json = matcher.group(3);
-            final Map<String, ?> parsedObject = new ObjectMapper().readValue(json, Map.class);
-            return parsedObject;
+            return matcher.group(3);
         }
         return null;
     }
 
 
-    private File computeTabFile(final Tab tab, final File folder) {
-        final File tabFile = new File(folder, tab.getName() + ".txt");
+    private File computeTabFile(final Tab tab, final File folder, final String ext) {
+        final File tabFile = new File(folder, tab.getName() + "." + ext);
         return tabFile;
     }
 }

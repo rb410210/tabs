@@ -13,8 +13,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Calendar;
 
 @Service
 public class Downloader {
@@ -24,18 +26,26 @@ public class Downloader {
     @Value("${com.rohitbalan.tabs.dailyDownloadThreshold}")
     private int dailyDownloadThreshold;
 
-    private int urlsDownloadedToday;
+    private long lastDownloadTimeInMillis;
+    private long waitTimeInMillis;
+
+    @PostConstruct
+    private void init() {
+        waitTimeInMillis = (1000 * 60 * 60 * 24)/dailyDownloadThreshold;
+        logger.debug("Setting waitTimeInMillis: {}", waitTimeInMillis);
+    }
 
 
 
     public String execute(final String url) throws IOException, InterruptedException {
-        if(urlsDownloadedToday < dailyDownloadThreshold) {
-            urlsDownloadedToday++;
-        } else {
-            logger.info("Sleeping for a day");
-            Thread.sleep(1000 * 60 * 60 * 24);
-            urlsDownloadedToday = 0;
+        final long currentTime = Calendar.getInstance().getTimeInMillis();
+        if(currentTime < (lastDownloadTimeInMillis + waitTimeInMillis)) {
+            final long sleepTime = lastDownloadTimeInMillis + waitTimeInMillis - currentTime;
+            logger.info("Sleeping for: {}", sleepTime);
+            Thread.sleep(sleepTime);
         }
+        lastDownloadTimeInMillis = Calendar.getInstance().getTimeInMillis();
+
         final CloseableHttpClient httpClient = HttpClients.createDefault();
 
         final HttpGet httpGet = new HttpGet(url);
@@ -47,6 +57,8 @@ public class Downloader {
         }
 
         final CloseableHttpResponse response = httpClient.execute(httpGet);
+        final int statusCode = response.getStatusLine().getStatusCode();
+        logger.debug("statusCode {}", statusCode);
         final HttpEntity entity = response.getEntity();
         return EntityUtils.toString(entity, StandardCharsets.UTF_8);
     }

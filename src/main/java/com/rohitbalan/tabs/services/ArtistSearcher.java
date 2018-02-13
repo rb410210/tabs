@@ -29,14 +29,13 @@ public class ArtistSearcher {
     public Artist execute(final String artist) throws IOException, InterruptedException {
         logger.info("Starting search criteria: " + artist);
 
-        /*
+/*
         final InputStream stream = new ClassPathResource("/search-results-1.html").getInputStream();
         final String content = IOUtils.toString(stream, Charset.defaultCharset());
-        */
+*/
 
         final String url = "https://www.ultimate-guitar.com/search.php?search_type=band&order=&value=" + URLEncoder.encode(artist, String.valueOf(StandardCharsets.US_ASCII));
         final String content = downloader.execute(url);
-
         return parseSearchResults(content);
     }
 
@@ -108,7 +107,7 @@ public class ArtistSearcher {
     }
 
     private Map<String, ?> standardMatcherJson(final String content) throws IOException {
-        final Pattern pattern = Pattern.compile("(.*)(window.UGAPP.store.page = )([{].*[}])(</script>)");
+        final Pattern pattern = Pattern.compile("(.*)(window.UGAPP.store.page = )([{].*[}])(</script>)*");
         final Matcher matcher = pattern.matcher(content);
 
         if (matcher.find()) {
