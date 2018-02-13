@@ -41,7 +41,7 @@ public class Downloader {
         final long currentTime = Calendar.getInstance().getTimeInMillis();
         if(currentTime < (lastDownloadTimeInMillis + waitTimeInMillis)) {
             final long sleepTime = lastDownloadTimeInMillis + waitTimeInMillis - currentTime;
-            logger.info("Sleeping for: {}", sleepTime);
+            logger.debug("Sleeping for: {}", sleepTime);
             Thread.sleep(sleepTime);
         }
         lastDownloadTimeInMillis = Calendar.getInstance().getTimeInMillis();
