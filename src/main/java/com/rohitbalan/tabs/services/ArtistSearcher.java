@@ -68,7 +68,7 @@ public class ArtistSearcher {
                 for (int i = 0; i < pages.size() ; i++) {
                     if(i==0)
                         continue;
-                    final Map<String, String> pageDetails = pages.get(0);
+                    final Map<String, String> pageDetails = pages.get(i);
                     final String paginationUrl = pageDetails.get("url");
                     if(paginationUrl!=null) {
                         /*
@@ -107,7 +107,7 @@ public class ArtistSearcher {
     }
 
     private Map<String, ?> standardMatcherJson(final String content) throws IOException {
-        final Pattern pattern = Pattern.compile("(.*)(window.UGAPP.store.page = )([{].*[}])(</script>)*");
+        final Pattern pattern = Pattern.compile("(.*)(window.UGAPP.store.page = )([{].*[}])([;]*)(</script>)*");
         final Matcher matcher = pattern.matcher(content);
 
         if (matcher.find()) {

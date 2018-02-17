@@ -95,7 +95,7 @@ public class ArtistDownloader {
     }
 
     private String standardMatcherJson(final String content) throws IOException {
-        final Pattern pattern = Pattern.compile("(.*)(window.UGAPP.store.page = )([{].*[}])(</script>)*");
+        final Pattern pattern = Pattern.compile("(.*)(window.UGAPP.store.page = )([{].*[}])([;]*)(</script>)*");
         final Matcher matcher = pattern.matcher(content);
 
         if (matcher.find()) {
