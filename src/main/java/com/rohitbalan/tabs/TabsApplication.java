@@ -22,8 +22,8 @@ public class TabsApplication {
 	@Autowired
 	private TabProcessor tabProcessor;
 
-	private boolean downloadRawTabs = false;
-	private boolean processTabs = true;
+	private boolean downloadRawTabs = true;
+	private boolean processTabs = false;
 
 
 	public static void main(String[] args) {
@@ -37,6 +37,7 @@ public class TabsApplication {
 				try {
 					final Artist artist = artistSearcher.execute(arg);
 					artistDownloader.execute(artist);
+					tabProcessor.processArtist(artist.getName());
 				} catch (final Exception e) {
 					logger.error(e.getMessage(), e);
 				}
