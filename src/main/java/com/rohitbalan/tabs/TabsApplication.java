@@ -7,48 +7,74 @@ import com.rohitbalan.tabs.services.TabProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ConfigurableApplicationContext;
+
+import java.util.List;
 
 @SpringBootApplication
-public class TabsApplication {
-	private final Logger logger = LoggerFactory.getLogger(TabsApplication.class);
+public class TabsApplication implements ApplicationRunner {
+    private final Logger logger = LoggerFactory.getLogger(TabsApplication.class);
 
-	@Autowired
-	private ArtistSearcher artistSearcher;
-	@Autowired
-	private ArtistDownloader artistDownloader;
-	@Autowired
-	private TabProcessor tabProcessor;
+    @Autowired
+    private ArtistSearcher artistSearcher;
+    @Autowired
+    private ArtistDownloader artistDownloader;
+    @Autowired
+    private TabProcessor tabProcessor;
 
-	private boolean downloadRawTabs = true;
-	private boolean processTabs = false;
+    private boolean downloadRawTabs = true;
+    private boolean processTabs = false;
 
 
-	public static void main(String[] args) {
-		final ConfigurableApplicationContext context = SpringApplication.run(TabsApplication.class, args);
-		context.getBean(TabsApplication.class).execute(args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(TabsApplication.class, args);
+    }
 
-	public void execute(final String[] args) {
-		if(downloadRawTabs) {
-			for(final String arg: args) {
-				try {
-					final Artist artist = artistSearcher.execute(arg);
-					artistDownloader.execute(artist);
-					tabProcessor.processArtist(artist.getName());
-				} catch (final Exception e) {
-					logger.error(e.getMessage(), e);
-				}
+    @Override
+    public void run(final ApplicationArguments applicationArguments) throws Exception {
+        if (applicationArguments.containsOption("page")) {
+            downloadRawTabsFromArtistUrls(applicationArguments.getNonOptionArgs());
+        } else {
+            downloadRawTabsFromArtistNames(applicationArguments.getNonOptionArgs());
+        }
+        processTabs();
+    }
 
-			}
-		}
-		if(processTabs) {
-			logger.info("Process ...");
-			tabProcessor.executeRootFolder();
-			logger.info("Completed ...");
-		}
-	}
+    public void processTabs() {
+        if (processTabs) {
+            logger.info("Process ...");
+            tabProcessor.executeRootFolder();
+            logger.info("Completed ...");
+        }
+    }
+
+    public void downloadRawTabsFromArtistNames(final List<String> args) {
+        for (final String arg : args) {
+            try {
+                final Artist artist = artistSearcher.searchAndGenerateArtist(arg);
+                artistDownloader.execute(artist);
+                tabProcessor.processArtist(artist.getName());
+            } catch (final Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+
+        }
+    }
+
+    public void downloadRawTabsFromArtistUrls(final List<String> urls) {
+        for (final String url : urls) {
+            try {
+                final Artist artist = artistSearcher.generateArtistFromArtistHomePage(url);
+                artistDownloader.execute(artist);
+                tabProcessor.processArtist(artist.getName());
+            } catch (final Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+
+        }
+    }
 
 }

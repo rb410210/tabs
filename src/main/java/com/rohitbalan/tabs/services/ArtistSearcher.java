@@ -26,13 +26,8 @@ public class ArtistSearcher {
     @Autowired
     private Downloader downloader;
 
-    public Artist execute(final String artist) throws IOException, InterruptedException {
+    public Artist searchAndGenerateArtist(final String artist) throws IOException, InterruptedException {
         logger.info("Starting search criteria: " + artist);
-
-/*
-        final InputStream stream = new ClassPathResource("/search-results-1.html").getInputStream();
-        final String content = IOUtils.toString(stream, Charset.defaultCharset());
-*/
 
         final String url = "https://www.ultimate-guitar.com/search.php?search_type=band&order=&value=" + URLEncoder.encode(artist, String.valueOf(StandardCharsets.US_ASCII));
         final String content = downloader.execute(url);
@@ -40,62 +35,61 @@ public class ArtistSearcher {
     }
 
     private Artist parseSearchResults(final String content) throws IOException, InterruptedException {
+
+        final Map<String, ?> searchJson = standardMatcherJson(content);
+        if (searchJson != null) {
+            final String artistUrl = ((Map<String, Map<String, List<Map<String, String>>>>) searchJson).get("data").get("results").get(0).get("artist_url");
+
+            return generateArtistFromArtistHomePage(artistUrl);
+        }
+        throw new RuntimeException("Unable to find artist");
+    }
+
+    public Artist generateArtistFromArtistHomePage(final String artistUrl) throws IOException, InterruptedException {
         final Artist artist = new Artist();
         final Set<Tab> tabs = new LinkedHashSet<>();
         artist.setTabs(tabs);
 
-        final Map<String, ?> searchJson = standardMatcherJson(content);
-        if(searchJson!=null) {
-            final String artistName = ((Map<String, Map<String, List<Map<String, String>>>>) searchJson).get("data").get("results").get(0).get("artist_name");
-            final String artistUrl = ((Map<String, Map<String, List<Map<String, String>>>>) searchJson).get("data").get("results").get(0).get("artist_url");
+        final String artistUrlContent = downloader.execute(artistUrl);
+        final Map<String, ?> artistJson = standardMatcherJson(artistUrlContent);
+        if (artistJson != null) {
+            logger.debug("artistJson {}", artistJson);
+
+            final String artistName = ((Map<String, Map<String, Map<String, String>>>) artistJson).get("data").get("artist").get("name");
+            logger.info("Artist Name: {}", artistName);
             artist.setName(artistName);
+            tabs.addAll(getTabs(artistJson));
 
+            final List<Map<String, String>> pages = ((Map<String, Map<String, Map<String, List<Map<String, String>>>>>) artistJson).get("data").get("pagination").get("pages");
+            logger.debug("pages {}", pages);
 
-            /*
-            final InputStream stream = new ClassPathResource("/artist-url-content.html").getInputStream();
-            final String artistUrlContent = IOUtils.toString(stream, Charset.defaultCharset());
-            */
-            final String artistUrlContent = downloader.execute(artistUrl);
+            for (int i = 0; i < pages.size(); i++) {
+                if (i == 0)
+                    continue;
+                final Map<String, String> pageDetails = pages.get(i);
+                final String paginationUrl = pageDetails.get("url");
+                if (paginationUrl != null) {
+                    final String paginatedUrlContent = downloader.execute("https://www.ultimate-guitar.com/" + paginationUrl);
 
-            final Map<String, ?> artistJson = standardMatcherJson(artistUrlContent);
-            if(artistJson!=null) {
-                logger.debug("artistJson {}", artistJson);
-                tabs.addAll(getTabs(artistJson));
-
-                final List<Map<String, String>> pages = ((Map<String, Map<String, Map<String, List<Map<String, String>>> >>) artistJson).get("data").get("pagination").get("pages");
-                logger.debug("pages {}", pages);
-
-                for (int i = 0; i < pages.size() ; i++) {
-                    if(i==0)
-                        continue;
-                    final Map<String, String> pageDetails = pages.get(i);
-                    final String paginationUrl = pageDetails.get("url");
-                    if(paginationUrl!=null) {
-                        /*
-                        final InputStream paginatedStream = new ClassPathResource("/artist-url-content.html").getInputStream();
-                        final String paginatedUrlContent = IOUtils.toString(paginatedStream, Charset.defaultCharset());
-                        */
-                        final String paginatedUrlContent = downloader.execute("https://www.ultimate-guitar.com/" + paginationUrl);
-
-                        final Map<String, ?> paginatedJson = standardMatcherJson(paginatedUrlContent);
-                        if(paginatedJson!=null) {
-                            logger.debug("paginatedJson {}", paginatedJson);
-                            tabs.addAll(getTabs(paginatedJson));
-                        }
+                    final Map<String, ?> paginatedJson = standardMatcherJson(paginatedUrlContent);
+                    if (paginatedJson != null) {
+                        logger.debug("paginatedJson {}", paginatedJson);
+                        tabs.addAll(getTabs(paginatedJson));
                     }
                 }
-
             }
+
         }
         return artist;
     }
 
+
     private Set<Tab> getTabs(final Map<String, ?> artistJson) {
         final Set<Tab> tabs = new LinkedHashSet<>();
         final List<Map<String, String>> othertabs = ((Map<String, Map<String, List<Map<String, String>>>>) artistJson).get("data").get("other_tabs");
-        for(final Map<String, String> tabMap: othertabs) {
+        for (final Map<String, String> tabMap : othertabs) {
             final String marketingType = tabMap.get("marketing_type");
-            if(!"TabPro".equals(marketingType)) {
+            if (!"TabPro".equals(marketingType)) {
                 final String tabUrl = tabMap.get("tab_url");
                 final String tabName = tabUrl.substring(tabUrl.lastIndexOf('/') + 1);
                 final Tab tab = new Tab(tabName, tabUrl);

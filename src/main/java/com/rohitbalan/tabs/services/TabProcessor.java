@@ -1,7 +1,7 @@
 package com.rohitbalan.tabs.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonpath.JsonPath;
+import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.Version;
@@ -13,13 +13,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StringUtils;
 
-import java.io.*;
+import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-
-import freemarker.template.Configuration;
-
-import javax.annotation.PostConstruct;
 
 @Service
 public class TabProcessor {
@@ -44,12 +44,12 @@ public class TabProcessor {
 
     public void executeRootFolder() {
         final File processedTabsFolder = new File(processedTabs);
-        if(!processedTabsFolder.exists()) {
+        if (!processedTabsFolder.exists()) {
             processedTabsFolder.mkdirs();
         }
         final File rawTabsFolder = new File(downloadTo);
         final File[] artists = rawTabsFolder.listFiles(pathname -> pathname.isDirectory());
-        for(final File artist: artists) {
+        for (final File artist : artists) {
             try {
                 processArtist(artist.getName());
             } catch (IOException e) {
@@ -67,12 +67,12 @@ public class TabProcessor {
 
         final File[] rawTabs = rawArtistsFolder.listFiles((dir, filename) -> filename.endsWith(".json") && !filename.startsWith("?"));
 
-        for(final File rawTab: rawTabs) {
+        for (final File rawTab : rawTabs) {
             final File processedTab = new File(processedArtistsFolder, rawTab.getName().replace(".json", ".txt"));
             final String jsonString = IOUtils.toString(new FileInputStream(rawTab), StandardCharsets.UTF_8);
             try {
                 final String tabContent = getTabContent(jsonString);
-                if(!StringUtils.isEmpty(tabContent)) {
+                if (!StringUtils.isEmpty(tabContent)) {
                     FileCopyUtils.copy(tabContent.getBytes(StandardCharsets.UTF_8), processedTab);
                 }
             } catch (Exception e) {

@@ -1,6 +1,5 @@
 package com.rohitbalan.tabs.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rohitbalan.tabs.model.Artist;
 import com.rohitbalan.tabs.model.Tab;
 import org.slf4j.Logger;
@@ -13,7 +12,6 @@ import org.springframework.util.FileCopyUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,9 +27,9 @@ public class ArtistDownloader {
     private String downloadTo;
 
     public void execute(final Artist artist) throws IOException, InterruptedException {
-        if(artist!=null && artist.getName()!=null && !artist.getTabs().isEmpty()) {
+        if (artist != null && artist.getName() != null && !artist.getTabs().isEmpty()) {
             final File artistFolder = createFolder(artist);
-            for(final Tab tab: artist.getTabs()) {
+            for (final Tab tab : artist.getTabs()) {
                 downloadTab(tab, artistFolder);
             }
         }
@@ -40,12 +38,12 @@ public class ArtistDownloader {
 
     private File createFolder(final Artist artist) {
         final File parentFolder = new File(downloadTo);
-        if(!parentFolder.exists()) {
+        if (!parentFolder.exists()) {
             throw new RuntimeException("Folder " + downloadTo + " is not present");
         }
         final File artistFolder = new File(parentFolder, artist.getName());
         artistFolder.mkdirs();
-        if(!artistFolder.exists()) {
+        if (!artistFolder.exists()) {
             throw new RuntimeException("Artist Folder not created.");
         }
         return artistFolder;
@@ -55,7 +53,7 @@ public class ArtistDownloader {
         final File jsonFile = computeTabFile(tab, folder, "json");
         final File rawHtmlFile = computeTabFile(tab, folder, "raw_html");
 
-        if(rawHtmlFile.exists()) {
+        if (rawHtmlFile.exists()) {
             logger.info("Was previously downloaded: {}", tab.getName());
             return;
         }
@@ -65,7 +63,6 @@ public class ArtistDownloader {
         final String content = IOUtils.toString(stream, Charset.defaultCharset());
         */
         final String content = downloader.execute(tab.getUri());
-
 
 
         final StringBuilder logStatus = new StringBuilder();
@@ -86,7 +83,7 @@ public class ArtistDownloader {
             logger.error("Unable to download {}", tab.getUri());
         }
 
-        if(jsonFile.exists()) {
+        if (jsonFile.exists()) {
             logStatus.append("COMPLETED");
         } else {
             logStatus.append("FAILED");

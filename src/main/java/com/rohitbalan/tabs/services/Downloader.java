@@ -31,15 +31,14 @@ public class Downloader {
 
     @PostConstruct
     private void init() {
-        waitTimeInMillis = (1000 * 60 * 60 * 24)/dailyDownloadThreshold;
+        waitTimeInMillis = (1000 * 60 * 60 * 24) / dailyDownloadThreshold;
         logger.debug("Setting waitTimeInMillis: {}", waitTimeInMillis);
     }
 
 
-
     public String execute(final String url) throws IOException, InterruptedException {
         final long currentTime = Calendar.getInstance().getTimeInMillis();
-        if(currentTime < (lastDownloadTimeInMillis + waitTimeInMillis)) {
+        if (currentTime < (lastDownloadTimeInMillis + waitTimeInMillis)) {
             final long sleepTime = lastDownloadTimeInMillis + waitTimeInMillis - currentTime;
             logger.debug("Sleeping for: {}", sleepTime);
             Thread.sleep(sleepTime);
@@ -50,7 +49,7 @@ public class Downloader {
 
         final HttpGet httpGet = new HttpGet(url);
 
-        if(System.getProperty("http.proxyHost")!=null && System.getProperty("http.proxyPort")!=null) {
+        if (System.getProperty("http.proxyHost") != null && System.getProperty("http.proxyPort") != null) {
             final HttpHost proxy = new HttpHost(System.getProperty("http.proxyHost"), Integer.parseInt(System.getProperty("http.proxyPort")), "http");
             final RequestConfig config = RequestConfig.custom().setProxy(proxy).build();
             httpGet.setConfig(config);
