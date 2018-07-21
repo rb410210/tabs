@@ -4,16 +4,17 @@ import com.rohitbalan.tabs.model.Artist;
 import com.rohitbalan.tabs.services.ArtistDownloader;
 import com.rohitbalan.tabs.services.ArtistSearcher;
 import com.rohitbalan.tabs.services.TabProcessor;
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.core.io.Resource;
 
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -27,6 +28,8 @@ public class TabsApplication implements ApplicationRunner {
     private ArtistDownloader artistDownloader;
     @Autowired
     private TabProcessor tabProcessor;
+    @Value("classpath:/help.txt")
+    private Resource helpText;
 
     public static void main(String[] args) {
         SpringApplication.run(TabsApplication.class, args);
@@ -35,8 +38,7 @@ public class TabsApplication implements ApplicationRunner {
     @Override
     public void run(final ApplicationArguments applicationArguments) throws Exception {
         if(applicationArguments.getSourceArgs()==null || applicationArguments.getSourceArgs().length==0) {
-            final File usageFile = new File(TabsApplication.class.getClassLoader().getResource("usage.txt").getFile());
-            final String usage = FileUtils.readFileToString(usageFile, StandardCharsets.UTF_8);
+            final String usage =  IOUtils.toString(helpText.getInputStream(), StandardCharsets.UTF_8);
             logger.info(usage);
         }
 

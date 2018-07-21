@@ -1,6 +1,1 @@
-if [ -z "$1" ]
-    then
-        echo "TabsManager: No URL provided"
-    else
-    	java -Dmode=retry -jar /usr/local/TabsManager/TabsManager.jar "$@"
-fi
+java -Dmode=retry -jar /usr/local/TabsManager/TabsManager.jar "$@"
