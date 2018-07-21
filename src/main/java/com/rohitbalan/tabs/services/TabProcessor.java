@@ -68,10 +68,12 @@ public class TabProcessor {
         final File[] rawTabs = rawArtistsFolder.listFiles((dir, filename) -> filename.endsWith(".json") && !filename.startsWith("?"));
 
         for (final File rawTab : rawTabs) {
-            final File processedTab = new File(processedArtistsFolder, rawTab.getName().replace(".json", ".txt"));
             final String jsonString = IOUtils.toString(new FileInputStream(rawTab), StandardCharsets.UTF_8);
+            final Map<String, ?> model = new ObjectMapper().readValue(jsonString, Map.class);
+
+            final File processedTab = getProcessedTabFile(processedArtistsFolder, rawTab, model);
             try {
-                final String tabContent = getTabContent(jsonString);
+                final String tabContent = getTabContent(model);
                 if (!StringUtils.isEmpty(tabContent)) {
                     FileCopyUtils.copy(tabContent.getBytes(StandardCharsets.UTF_8), processedTab);
                 }
@@ -82,8 +84,32 @@ public class TabProcessor {
 
     }
 
-    private String getTabContent(final String jsonString) throws IOException, TemplateException {
-        final Map<String, ?> model = new ObjectMapper().readValue(jsonString, Map.class);
+    private File getProcessedTabFile(final File processedArtistsFolder, final File rawTab, final Map<String,?> model) {
+        String name = rawTab.getName().replace(".json", ".txt");
+
+        try {
+            final String songName = ((Map<String,Map<String,Map<String,String>>>) model).get("data").get("tab").get("song_name");
+            final String type = ((Map<String,Map<String,Map<String,String>>>) model).get("data").get("tab").get("type");
+            final Integer id = ((Map<String,Map<String,Map<String,Integer>>>) model).get("data").get("tab").get("id");
+            final Object objectRating = ((Map<String,Map<String,Map<String,Object>>>) model).get("data").get("tab").get("rating");
+            final int rating;
+            if(objectRating instanceof Double) {
+                rating = Math.round(((Double)objectRating).floatValue());
+            } else if (objectRating instanceof Float) {
+                rating = Math.round((Float)objectRating);
+            } else if (objectRating instanceof Integer) {
+                rating = (int) objectRating;
+            } else {
+                rating = 0;
+            }
+            name = (songName + " - " + type + " - S" + rating + " - " + id).replace('/', '-') + ".txt";
+        } catch (Exception e) {
+            logger.error("using default filename", e);
+        }
+        return new File(processedArtistsFolder, name);
+    }
+
+    private String getTabContent(final Map<String, ?> model) throws IOException, TemplateException {
         final StringWriter out = new StringWriter();
         freeMarkerTemplate.process(model, out);
         return out.toString().replace("[ch]", "").replace("[/ch]", "");
