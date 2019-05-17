@@ -36,7 +36,10 @@ public class Downloader {
     }
 
 
-    public String execute(final String url) throws IOException, InterruptedException {
+    public String execute(String url) throws IOException, InterruptedException {
+        if(url!=null && url.startsWith("/")) {
+            url = "https://www.ultimate-guitar.com" + url;
+        }
         final long currentTime = Calendar.getInstance().getTimeInMillis();
         if (currentTime < (lastDownloadTimeInMillis + waitTimeInMillis)) {
             final long sleepTime = lastDownloadTimeInMillis + waitTimeInMillis - currentTime;
