@@ -1,1 +1,1 @@
-java -Dmode=retry -Dspring.active.profiles=wsl -jar /usr/local/TabsManager/TabsManager.jar "$@"
+java -Dmode=retry -Dspring.profiles.active=wsl -jar /usr/local/TabsManager/TabsManager.jar "$@"
