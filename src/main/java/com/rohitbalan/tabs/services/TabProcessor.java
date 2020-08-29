@@ -89,10 +89,10 @@ public class TabProcessor {
         String name = rawTab.getName().replace(".json", ".txt");
 
         try {
-            final String songName = ((Map<String,Map<String,Map<String,String>>>) model).get("data").get("tab").get("song_name");
-            final String type = ((Map<String,Map<String,Map<String,String>>>) model).get("data").get("tab").get("type");
-            final Integer id = ((Map<String,Map<String,Map<String,Integer>>>) model).get("data").get("tab").get("id");
-            final Object objectRating = ((Map<String,Map<String,Map<String,Object>>>) model).get("data").get("tab").get("rating");
+            final String songName = ((Map<String, Map<String, Map<String, Map<String,Map<String,String>>>>>) model).get("store").get("page").get("data").get("tab").get("song_name");
+            final String type = ((Map<String, Map<String, Map<String,Map<String,Map<String,String>>>>>) model).get("store").get("page").get("data").get("tab").get("type");
+            final Integer id = ((Map<String, Map<String, Map<String,Map<String,Map<String,Integer>>>>>) model).get("store").get("page").get("data").get("tab").get("id");
+            final Object objectRating = ((Map<String, Map<String, Map<String,Map<String,Map<String,Object>>>>>) model).get("store").get("page").get("data").get("tab").get("rating");
             final int rating;
             if(objectRating instanceof Double) {
                 rating = Math.round(((Double)objectRating).floatValue());

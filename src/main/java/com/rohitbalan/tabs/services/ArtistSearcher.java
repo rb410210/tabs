@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rohitbalan.tabs.model.Artist;
 import com.rohitbalan.tabs.model.Tab;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +37,7 @@ public class ArtistSearcher {
 
         final Map<String, ?> searchJson = standardMatcherJson(content);
         if (searchJson != null) {
-            final String artistUrl = ((Map<String, Map<String, List<Map<String, String>>>>) searchJson).get("data").get("results").get(0).get("artist_url");
+            final String artistUrl = ((Map<String, Map<String, Map<String, Map<String, List<Map<String, String>>>>>>) searchJson).get("store").get("page").get("data").get("results").get(0).get("artist_url");
 
             return generateArtistFromArtistHomePage(artistUrl);
         }
@@ -53,12 +54,12 @@ public class ArtistSearcher {
         if (artistJson != null) {
             log.debug("artistJson {}", artistJson);
 
-            final String artistName = ((Map<String, Map<String, Map<String, String>>>) artistJson).get("data").get("artist").get("name");
+            final String artistName = ((Map<String, Map<String, Map<String, Map<String, Map<String, String>>>>>) artistJson).get("store").get("page").get("data").get("artist").get("name");
             log.info("Artist Name: {}", artistName);
             artist.setName(artistName);
             tabs.addAll(getTabs(artistJson));
 
-            final List<Map<String, String>> pages = ((Map<String, Map<String, Map<String, List<Map<String, String>>>>>) artistJson).get("data").get("pagination").get("pages");
+            final List<Map<String, String>> pages = ((Map<String, Map<String, Map<String, Map<String, Map<String, List<Map<String, String>>>>>>>) artistJson).get("store").get("page").get("data").get("pagination").get("pages");
             log.debug("pages {}", pages);
 
             for (int i = 0; i < pages.size(); i++) {
@@ -84,7 +85,7 @@ public class ArtistSearcher {
 
     private Set<Tab> getTabs(final Map<String, ?> artistJson) {
         final Set<Tab> tabs = new LinkedHashSet<>();
-        final List<Map<String, String>> othertabs = ((Map<String, Map<String, List<Map<String, String>>>>) artistJson).get("data").get("other_tabs");
+        final List<Map<String, String>> othertabs = ((Map<String, Map<String, Map<String, Map<String, List<Map<String, String>>>>>>) artistJson).get("store").get("page").get("data").get("other_tabs");
         for (final Map<String, String> tabMap : othertabs) {
             final String marketingType = tabMap.get("marketing_type");
             if (!"TabPro".equals(marketingType)) {
@@ -99,11 +100,12 @@ public class ArtistSearcher {
     }
 
     private Map<String, ?> standardMatcherJson(final String content) throws IOException {
-        final Pattern pattern = Pattern.compile("(.*)(window.UGAPP.store.page = )([{].*[}])([;]*)(</script>)*");
+        final Pattern pattern = Pattern.compile(".*(data-content=\")([^\"]*)(\").*");
         final Matcher matcher = pattern.matcher(content);
 
         if (matcher.find()) {
-            String json = matcher.group(3);
+            final String encodedJson = matcher.group(2);
+            final String json = StringEscapeUtils.unescapeHtml4(encodedJson);
             final Map<String, ?> parsedObject = new ObjectMapper().readValue(json, Map.class);
             return parsedObject;
         }

@@ -3,6 +3,7 @@ package com.rohitbalan.tabs.services;
 import com.rohitbalan.tabs.model.Artist;
 import com.rohitbalan.tabs.model.Tab;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,12 +59,7 @@ public class ArtistDownloader {
             return;
         }
 
-        /*
-        final InputStream stream = new ClassPathResource("/tab-content.html").getInputStream();
-        final String content = IOUtils.toString(stream, Charset.defaultCharset());
-        */
         final String content = downloader.execute(tab.getUri());
-
 
         final StringBuilder logStatus = new StringBuilder();
         logStatus.append("Downloading - ");
@@ -73,12 +69,8 @@ public class ArtistDownloader {
             log.debug("Content: {}", content);
             FileCopyUtils.copy(content.getBytes(StandardCharsets.UTF_8), rawHtmlFile);
 
-
             final String tabJson = standardMatcherJson(content);
             FileCopyUtils.copy(tabJson.getBytes(StandardCharsets.UTF_8), jsonFile);
-
-            //String tabContent = ((Map<String, Map<String, Map<String, Map<String, String>>>>) tabJson).get("data").get("tab_view").get("wiki_tab").get("content");
-
         } catch (Exception error) {
             log.error("Unable to download {}", tab.getUri());
         }
@@ -92,11 +84,12 @@ public class ArtistDownloader {
     }
 
     private String standardMatcherJson(final String content) throws IOException {
-        final Pattern pattern = Pattern.compile("(.*)(window.UGAPP.store.page = )([{].*[}])([;]*)(</script>)*");
+        final Pattern pattern = Pattern.compile(".*(data-content=\")([^\"]*)(\").*");
         final Matcher matcher = pattern.matcher(content);
 
         if (matcher.find()) {
-            return matcher.group(3);
+            final String encodedJson = matcher.group(2);
+            return StringEscapeUtils.unescapeHtml4(encodedJson);
         }
         return null;
     }

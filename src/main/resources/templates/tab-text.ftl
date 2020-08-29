@@ -1,11 +1,11 @@
 ###############################################################
-Song:       ${data.tab.song_name}
-Artist:     ${data.tab.artist_name}
-Type:       ${data.tab.type}
-Votes:      ${data.tab.votes}
-Stars:      ${data.tab.rating}
-URL:        ${data.tab.tab_url}
+Song:       ${store.page.data.tab.song_name}
+Artist:     ${store.page.data.tab.artist_name}
+Type:       ${store.page.data.tab.type}
+Votes:      ${store.page.data.tab.votes}
+Stars:      ${store.page.data.tab.rating}
+URL:        ${store.page.data.tab.tab_url}
 ###############################################################
-${data.tab_view.wiki_tab.content}
+${store.page.data.tab_view.wiki_tab.content}
 ${junk!}
 <#if junk??>${junk.junkie!}</#if>
