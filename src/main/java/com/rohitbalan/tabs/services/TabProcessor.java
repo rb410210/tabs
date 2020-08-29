@@ -5,6 +5,7 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.Version;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,9 +22,9 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class TabProcessor {
-    private final Logger logger = LoggerFactory.getLogger(TabProcessor.class);
 
     private Template freeMarkerTemplate;
 
@@ -53,13 +54,13 @@ public class TabProcessor {
             try {
                 processArtist(artist.getName());
             } catch (IOException e) {
-                logger.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
             }
         }
     }
 
     public void processArtist(final String name) throws IOException {
-        logger.info("Processing artist {}", name);
+        log.info("Processing artist {}", name);
         final File processedTabsFolder = new File(processedTabs);
         final File rawArtistsFolder = new File(new File(downloadTo), name);
         final File processedArtistsFolder = new File(processedTabsFolder, name);
@@ -78,7 +79,7 @@ public class TabProcessor {
                     FileCopyUtils.copy(tabContent.getBytes(StandardCharsets.UTF_8), processedTab);
                 }
             } catch (Exception e) {
-                logger.error("Unable to process " + name + " - " + rawTab.getName());
+                log.error("Unable to process " + name + " - " + rawTab.getName());
             }
         }
 
@@ -104,7 +105,7 @@ public class TabProcessor {
             }
             name = (songName + " - " + type + " - S" + rating + " - " + id).replace('/', '-') + ".txt";
         } catch (Exception e) {
-            logger.error("using default filename", e);
+            log.error("using default filename", e);
         }
         return new File(processedArtistsFolder, name);
     }

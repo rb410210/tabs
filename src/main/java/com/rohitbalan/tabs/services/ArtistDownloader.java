@@ -2,6 +2,7 @@ package com.rohitbalan.tabs.services;
 
 import com.rohitbalan.tabs.model.Artist;
 import com.rohitbalan.tabs.model.Tab;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,11 +16,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Service
 public class ArtistDownloader {
-
-    private final Logger logger = LoggerFactory.getLogger(ArtistDownloader.class);
-
+    
     @Autowired
     private Downloader downloader;
 
@@ -54,7 +54,7 @@ public class ArtistDownloader {
         final File rawHtmlFile = computeTabFile(tab, folder, "raw_html");
 
         if (rawHtmlFile.exists()) {
-            logger.info("Was previously downloaded: {}", tab.getName());
+            log.info("Was previously downloaded: {}", tab.getName());
             return;
         }
 
@@ -70,7 +70,7 @@ public class ArtistDownloader {
         logStatus.append(tab.getName());
         logStatus.append(" : ");
         try {
-            logger.debug("Content: {}", content);
+            log.debug("Content: {}", content);
             FileCopyUtils.copy(content.getBytes(StandardCharsets.UTF_8), rawHtmlFile);
 
 
@@ -80,7 +80,7 @@ public class ArtistDownloader {
             //String tabContent = ((Map<String, Map<String, Map<String, Map<String, String>>>>) tabJson).get("data").get("tab_view").get("wiki_tab").get("content");
 
         } catch (Exception error) {
-            logger.error("Unable to download {}", tab.getUri());
+            log.error("Unable to download {}", tab.getUri());
         }
 
         if (jsonFile.exists()) {
@@ -88,7 +88,7 @@ public class ArtistDownloader {
         } else {
             logStatus.append("FAILED");
         }
-        logger.info(logStatus.toString());
+        log.info(logStatus.toString());
     }
 
     private String standardMatcherJson(final String content) throws IOException {

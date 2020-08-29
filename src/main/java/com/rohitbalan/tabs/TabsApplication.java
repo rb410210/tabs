@@ -4,9 +4,8 @@ import com.rohitbalan.tabs.model.Artist;
 import com.rohitbalan.tabs.services.ArtistDownloader;
 import com.rohitbalan.tabs.services.ArtistSearcher;
 import com.rohitbalan.tabs.services.TabProcessor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
@@ -18,9 +17,9 @@ import org.springframework.core.io.Resource;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+@Slf4j
 @SpringBootApplication
 public class TabsApplication implements ApplicationRunner {
-    private final Logger logger = LoggerFactory.getLogger(TabsApplication.class);
 
     @Autowired
     private ArtistSearcher artistSearcher;
@@ -39,7 +38,7 @@ public class TabsApplication implements ApplicationRunner {
     public void run(final ApplicationArguments applicationArguments) throws Exception {
         if(applicationArguments.getSourceArgs()==null || applicationArguments.getSourceArgs().length==0) {
             final String usage =  IOUtils.toString(helpText.getInputStream(), StandardCharsets.UTF_8);
-            logger.info(usage);
+            log.info(usage);
         }
 
         if (applicationArguments.containsOption("page")) {
@@ -53,9 +52,9 @@ public class TabsApplication implements ApplicationRunner {
     }
 
     public void processTabs() {
-        logger.info("Process ...");
+        log.info("Process ...");
         tabProcessor.executeRootFolder();
-        logger.info("Completed ...");
+        log.info("Completed ...");
     }
 
     public void downloadRawTabsFromArtistNames(final List<String> args) {
@@ -65,7 +64,7 @@ public class TabsApplication implements ApplicationRunner {
                 artistDownloader.execute(artist);
                 tabProcessor.processArtist(artist.getName());
             } catch (final Exception e) {
-                logger.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
             }
 
         }
@@ -78,7 +77,7 @@ public class TabsApplication implements ApplicationRunner {
                 artistDownloader.execute(artist);
                 tabProcessor.processArtist(artist.getName());
             } catch (final Exception e) {
-                logger.error(e.getMessage(), e);
+                log.error(e.getMessage(), e);
             }
 
         }

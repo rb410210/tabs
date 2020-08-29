@@ -3,8 +3,7 @@ package com.rohitbalan.tabs.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rohitbalan.tabs.model.Artist;
 import com.rohitbalan.tabs.model.Tab;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,16 +17,15 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Service
 public class ArtistSearcher {
-
-    private final Logger logger = LoggerFactory.getLogger(ArtistSearcher.class);
 
     @Autowired
     private Downloader downloader;
 
     public Artist searchAndGenerateArtist(final String artist) throws IOException, InterruptedException {
-        logger.info("Starting search criteria: " + artist);
+        log.info("Starting search criteria: " + artist);
 
         final String url = "https://www.ultimate-guitar.com/search.php?search_type=band&order=&value=" + URLEncoder.encode(artist, String.valueOf(StandardCharsets.US_ASCII));
         final String content = downloader.execute(url);
@@ -53,15 +51,15 @@ public class ArtistSearcher {
         final String artistUrlContent = downloader.execute(artistUrl);
         final Map<String, ?> artistJson = standardMatcherJson(artistUrlContent);
         if (artistJson != null) {
-            logger.debug("artistJson {}", artistJson);
+            log.debug("artistJson {}", artistJson);
 
             final String artistName = ((Map<String, Map<String, Map<String, String>>>) artistJson).get("data").get("artist").get("name");
-            logger.info("Artist Name: {}", artistName);
+            log.info("Artist Name: {}", artistName);
             artist.setName(artistName);
             tabs.addAll(getTabs(artistJson));
 
             final List<Map<String, String>> pages = ((Map<String, Map<String, Map<String, List<Map<String, String>>>>>) artistJson).get("data").get("pagination").get("pages");
-            logger.debug("pages {}", pages);
+            log.debug("pages {}", pages);
 
             for (int i = 0; i < pages.size(); i++) {
                 if (i == 0)
@@ -73,7 +71,7 @@ public class ArtistSearcher {
 
                     final Map<String, ?> paginatedJson = standardMatcherJson(paginatedUrlContent);
                     if (paginatedJson != null) {
-                        logger.debug("paginatedJson {}", paginatedJson);
+                        log.debug("paginatedJson {}", paginatedJson);
                         tabs.addAll(getTabs(paginatedJson));
                     }
                 }
