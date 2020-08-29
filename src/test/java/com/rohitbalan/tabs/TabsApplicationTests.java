@@ -25,7 +25,6 @@ public class TabsApplicationTests {
 
 	@Test
 	public void testBorns() throws IOException {
-		tabProcessor.processArtist("BØRNS");
 	}
 
 }
