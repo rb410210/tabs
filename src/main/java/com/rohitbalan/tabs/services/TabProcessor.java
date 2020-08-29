@@ -113,7 +113,12 @@ public class TabProcessor {
     private String getTabContent(final Map<String, ?> model) throws IOException, TemplateException {
         final StringWriter out = new StringWriter();
         freeMarkerTemplate.process(model, out);
-        return out.toString().replace("[ch]", "").replace("[/ch]", "");
+        return out
+                .toString()
+                .replace("[tab]", "")
+                .replace("[/tab]", "")
+                .replace("[ch]", "")
+                .replace("[/ch]", "");
     }
 
 
