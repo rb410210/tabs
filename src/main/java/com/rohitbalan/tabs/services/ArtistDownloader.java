@@ -53,8 +53,9 @@ public class ArtistDownloader {
     private void downloadTab(final Tab tab, final File folder) throws IOException, InterruptedException {
         final File jsonFile = computeTabFile(tab, folder, "json");
         final File rawHtmlFile = computeTabFile(tab, folder, "raw_html");
+        final File legacyRawHtmlFile = computeLegacyTabFile(tab, folder, "raw_html");
 
-        if (rawHtmlFile.exists()) {
+        if (rawHtmlFile.exists() || legacyRawHtmlFile.exists()) {
             log.info("Was previously downloaded: {}", tab.getName());
             return;
         }
@@ -94,6 +95,11 @@ public class ArtistDownloader {
         return null;
     }
 
+
+    private File computeLegacyTabFile(final Tab tab, final File folder, final String ext) {
+        final File tabFile = new File(folder, tab.getName().replace('-', '_') + "." + ext);
+        return tabFile;
+    }
 
     private File computeTabFile(final Tab tab, final File folder, final String ext) {
         final File tabFile = new File(folder, tab.getName() + "." + ext);
