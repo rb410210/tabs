@@ -1,5 +1,6 @@
 package com.rohitbalan.tabs.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -7,8 +8,6 @@ import freemarker.template.TemplateException;
 import freemarker.template.Version;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileCopyUtils;
@@ -20,6 +19,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Map;
 
 @Slf4j
@@ -70,10 +70,9 @@ public class TabProcessor {
 
         for (final File rawTab : rawTabs) {
             final String jsonString = IOUtils.toString(new FileInputStream(rawTab), StandardCharsets.UTF_8);
-            final Map<String, ?> model = new ObjectMapper().readValue(jsonString, Map.class);
-
-            final File processedTab = getProcessedTabFile(processedArtistsFolder, rawTab, model);
             try {
+                final Map<String, ?> model = generateModel(jsonString);
+                final File processedTab = getProcessedTabFile(processedArtistsFolder, rawTab, model);
                 final String tabContent = getTabContent(model);
                 if (!StringUtils.isEmpty(tabContent)) {
                     FileCopyUtils.copy(tabContent.getBytes(StandardCharsets.UTF_8), processedTab);
@@ -83,6 +82,15 @@ public class TabProcessor {
             }
         }
 
+    }
+
+    private Map<String, ?> generateModel(final String jsonString) throws JsonProcessingException {
+        final Map<String, ?> model = new ObjectMapper().readValue(jsonString, Map.class);
+        if(model.containsKey("store")) {
+            return model;
+        } else {
+            return Collections.singletonMap("store", Collections.singletonMap("page", model));
+        }
     }
 
     private File getProcessedTabFile(final File processedArtistsFolder, final File rawTab, final Map<String,?> model) {
